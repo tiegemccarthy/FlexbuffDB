@@ -26,19 +26,19 @@ def updateFlexbuffContents(flexbuff_tag, db_name): # add data from disk_used fil
     flexbuff_tag = str(flexbuff_tag)
     db_name = str(db_name)
     # connect to the database
-    conn = mariadb.connect(user='auscope', passwd='password', db=db_name, local_infile=1)
+    conn = mariadb.connect(user='auscope', passwd='password', db=db_name)
     cursor = conn.cursor()
     # This process seems somewhat redundant but is best practice for ensuring table data is not deleted before ensuring new data has been loaded without errors.
-    # Create a table for the new inbound data named flexbuffXX_NEW
-    query = "CREATE TABLE IF NOT EXISTS "+ flexbuff_tag + "_NEW (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, DataUsage BIGINT);" 
+    # Create a table for the new inbound data named flexbuffXX_NEWSELECT @@GLOBAL.sql_mode;
+    query = "CREATE TABLE IF NOT EXISTS "+ flexbuff_tag + "_NEW (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, DataUsage BIGINT, TimeStamp DATETIME);" 
     cursor.execute(query)
     conn.commit()
     # Create a temporary 'current' flexbuffXX table, this table will only not exist on a first run
-    query = "CREATE TABLE IF NOT EXISTS "+ flexbuff_tag + " (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, DataUsage BIGINT);" 
+    query = "CREATE TABLE IF NOT EXISTS "+ flexbuff_tag + " (ExpID VARCHAR(10) NOT NULL PRIMARY KEY, DataUsage BIGINT, TimeStamp DATETIME);" 
     cursor.execute(query)
     conn.commit()
     # Load CSV data into the newly created flexbuffXX_NEW table
-    query = "LOAD DATA LOCAL INFILE '" + dirname + "/disk_used_" + flexbuff_tag + ".csv' REPLACE INTO TABLE "+ flexbuff_tag + "_NEW FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (ExpID, DataUsage);"
+    query = "LOAD DATA LOCAL INFILE '/home/tiege/Documents/research/auscope/flexbuff_database/disk_used_" + flexbuff_tag + ".csv' REPLACE INTO TABLE "+ flexbuff_tag + "_NEW FIELDS TERMINATED BY ',' LINES TERMINATED BY '\n' (ExpID, DataUsage, @TimeStamp) SET TimeStamp = STR_TO_DATE(@TimeStamp,'%d %b %Y');"
     cursor.execute(query)
     conn.commit()
     # Drop any existing flexbuffXX_OLD table (this will soon be replaced by the current flexbuffXX table)
