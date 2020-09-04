@@ -67,12 +67,16 @@ def main(db_name):
     flexbuff_id = ['flexbuffhb', 'flexbuffke', 'flexbuffyg', 'flexbuffcd']
     # for each flexbuff machine, pull relevant disk usage data and add to the database
     for flexbuff in flexbuff_id:
-        print('Pulling disk contents file from ' + flexbuff + '.')
-        flexbuffContentsPull(flexbuff)
+        print('Attempting to pull disk contents data file from ' + flexbuff + '.')
+        try:
+            flexbuffContentsPull(flexbuff)
+        except Exception:
+            print("No disk usage data on " + flexbuff + ".")
         print('Adding disk contents to the ' + flexbuff + ' table of the ' + db_name + ' mariaDB database.')
-        updateFlexbuffContents(flexbuff, db_name)
-
-
+        try:
+            updateFlexbuffContents(flexbuff, db_name)
+        except Exception:
+            print("Failed to add " + flexbuff + " contents to" + db_name + " .")
 
 if __name__ == '__main__':
     # auscope_file_scraper.py executed as a script
